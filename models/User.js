@@ -27,10 +27,6 @@ var UserSchema = mongoose.Schema({
         type:String,
         required:true
     },
-    customerSite:{
-        type:String,
-        required:true
-    },
     password:{
         type:String,
         bcrypt:true,
@@ -41,7 +37,21 @@ var UserSchema = mongoose.Schema({
     },
     resetPasswordExpire:{
         type:String
-    }
+    },
+    customerSite:[{
+        name:{
+            type:String
+        },
+        lat:{
+            type:String
+        },
+        long:{
+            type:String
+        },
+        address:{
+            type:String
+        }
+    }]
 });
 
 
@@ -85,4 +95,13 @@ module.exports.saveUserResetPassword = function(user, callback){
 }
 module.exports.updateUser = function(id, newUser, callback){
     User.findOneAndUpdate({_id:id}, newUser, callback);
+}
+
+module.exports.addSite = function(customerSite, id,callback){
+    console.log(customerSite);
+    User.findOneAndUpdate({_id:id}, {$push: {'customerSite':customerSite}}, {safe:true, upsert:true}, callback);   
+}
+
+module.exports.removeSite = function(userid, siteid, callback){
+    User.findOneAndUpdate({_id:userid}, {$pull: {customerSite : {_id:siteid}}},callback);
 }
