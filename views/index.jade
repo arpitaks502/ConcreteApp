@@ -1,0 +1,174 @@
+extends layout
+
+block content
+
+  a.btn.btn-danger(href='/profile') Profile
+  br
+  br
+  br
+  br
+  a.btn.btn-success(href='/history') History
+  br
+  br
+  br
+  br
+  if issues
+    legend Pending Issues
+    table.table.table-striped.table-bordered
+      thead
+        tr
+          td  title
+          td  type
+          td  description
+          td  date 
+          td  status
+      tdata
+        each issue, i in issues
+          if !issue.resolved
+            tr
+              td #{issue.title}
+              td #{issue.type}
+              td #{issue.description}
+              td #{issue.date}
+              td #{issue.status}
+    legend Resolved issues
+    table.table.table-striped.table-bordered
+      thead
+        td  title
+        td  type
+        td  description
+        td  date 
+        td  status
+      tdata
+        each issue, i in issues
+          if issue.resolved
+            tr
+              td #{issue.title}
+              td #{issue.type}
+              td #{issue.description}
+              td #{issue.date}
+              td #{issue.status}
+  br
+  br
+  br
+  br
+  if orders
+    legend Current Orders
+    table.table.table-striped.table-bordered
+      thead
+        tr
+          td  quantity
+          td  quality
+          td  date
+          td  status
+          td  companyName
+          td  Cancel order
+      tdata
+        each order, i in orders
+          if !order.cancelled
+            tr
+              td #{order.quantity}
+              td #{order.quality}
+              td #{order.date}
+              td #{order.status}
+              td #{order.companyName}
+              td 
+                a.btn.btn-danger(href='#',id='cancelOrderBtn' data-id='#{order._id}') Cancel order
+                input(id='#{order._id}', type='text' placeholder='reason for cancellation')
+    legend Cancelled Orders
+    table.table.table-striped.table-bordered
+      thead
+        td  quantity
+        td  quality
+        td  date
+        td  status
+        td  companyName
+        td  reason for cancellation
+      tdata
+        each order, i in orders
+          if order.cancelled
+            tr
+              td #{order.quantity}
+              td #{order.quality}
+              td #{order.date}
+              td #{order.status}
+              td #{order.companyName}
+              td #{order.reason}
+  br
+  br
+  br
+  br
+  form(action='/forgot', method='post')
+    .form-group
+      legend Forgot Password
+      input.form-control(type='text' placeholder='email' name='email')
+      br
+      br
+      input.form-control.btn.btn-success(type='Submit' value='submit')
+  br
+  br
+  br
+  br
+  br
+  form(action='/addorder', method='post')
+    .form-group
+      legend Add Order
+      input.form-control(type='text' placeholder='quality' name='quality')
+      br
+      br
+      input.form-control(type='text' placeholder='quantity' name='quantity')
+      br
+      br
+      input.form-control(type='hidden' name='requestedById' value='#{user._id}')
+      br
+      br
+      input.form-control(type='hidden' name='requestedBy' value='#{user.name}')
+      br
+      br
+      input.form-control.btn.btn-success(type='Submit' value='submit')
+  br
+  br
+  br
+  br
+  br
+  br
+  form(action='/addissue', method='post')
+    .form-group
+      legend Add Issue
+      input.form-control(type='text' placeholder='title' name='title')
+      br
+      input.form-control(type='text' placeholder='type' name='type')
+      br
+      input.form-control(type='text' placeholder='description' name='description')
+      br
+      input.form-control(type='text' placeholder='orderId' name='orderId')
+      br
+      br
+      input.form-control.btn.btn-success(type='Submit' value='submit')
+  br
+  br
+  br
+  br
+  br
+  script(type='text/javascript').
+    $(document).ready(function(){
+      $('#cancelOrderBtn').click(function(e){
+        console.log('button clicked');
+        e.preventDefault();
+        var id = $(this).data('id');
+        var reason = document.getElementById(id).value;
+        var data = {
+          orderId:id,
+          reason:reason
+        }
+        console.log(data);
+        $.post(
+          '/cancelorder',
+          data,
+          function(data){
+            console.log(data);
+          }
+        );
+        window.location = '/';
+      })
+    })
