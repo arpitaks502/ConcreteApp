@@ -14,6 +14,7 @@ var LocalStrategy = require('passport-local').Strategy;
 var User  = require('../models/User');
 var Order = require('../models/Orders');
 var Issue = require('../models/Issues');
+var Quote = require('../models/Quotations');
 
 
 //These are all the get requests
@@ -24,15 +25,18 @@ router.get('/', isAuthenticated, function(req, res, next){
         console.log(orders);
         Issue.getAllIssuesByUserId(req.user._id, function(err, issues){
             if(err)throw err;
-            res.render('index', {
-                user:req.user,
-                orders:orders,
-                issues:issues
+            Quote.getAllQuotesByUserId(req.user._id, function(err, quotes){
+                if(err)throw err;
+                res.render('index', {
+                    user:req.user,
+                    orders:orders,
+                    issues:issues,
+                    quotes:quotes
+                });
             });
-        })
-    })
-    
-})
+        });
+    });
+});
 
 //for login page
 router.get('/login', function(req, res, next){
@@ -159,7 +163,6 @@ router.post('/signup', function(req, res, next){
     var contact = req.body.contact;
     var pan = req.body.pan;
     var gstin = req.body.gstin;
-    var customerSite = req.body.customerSite;
     var password = req.body.password;
     var password2 = req.body.password2;
 
@@ -171,7 +174,6 @@ router.post('/signup', function(req, res, next){
     req.checkBody('contact', 'contact cannot be empty').notEmpty();
     req.checkBody('pan', 'Pan cannot be empty').notEmpty();
     req.checkBody('gstin', 'GSTIN cannot be empty').notEmpty();
-    req.checkBody('customerSite', 'Site cannot be empty').notEmpty();
     req.checkBody('email', "Enter a valid email").isEmail();
     req.checkBody('password', 'password cannot be empty').notEmpty();
     req.checkBody('password2', 'confirm password cannot be empty').notEmpty();
@@ -191,7 +193,6 @@ router.post('/signup', function(req, res, next){
             contact:contact,
             pan:pan,
             gstin:gstin,
-            customerSite:customerSite,
             password:password
         });
 
@@ -206,6 +207,57 @@ router.post('/signup', function(req, res, next){
         })
     }
 });
+
+//this route is used to add a customer site
+router.post('/addsite', function(req, res){
+    var name = req.body.name;
+    var lat = req.body.lat;
+    var long = req.body.long;
+    var address = req.body.address;
+
+    req.checkBody('name', 'Name cannot be empty').notEmpty();
+    req.checkBody('lat', 'lat cannot be empty').notEmpty();
+    req.checkBody('long', 'long cannot be empty').notEmpty();
+    req.checkBody('address', 'address cannot be empty').notEmpty();
+
+    var errors = req.validationErrors();
+    console.log(errors);
+
+    if(errors){
+        //console.log(errors);
+        res.send(errors);
+    }else{
+        console.log('else block called');
+        var customerSite = {
+            name:name,
+            lat:lat,
+            long:long,
+            address:address
+        };
+        console.log(customerSite);
+
+        User.addSite(customerSite, req.user._id, function (err, user) {
+            if(err){
+                res.send('some error occured');
+                throw err;
+            }else{
+                console.log(user);
+                res.send('site added');
+            }
+        })
+    }
+})
+
+
+//this route deletes site from the site array in user document
+router.post('/deletesite', function(req, res){
+    //change this to pick userid from req header and site id  from req.body
+    User.removeSite(req.body.userid, req.body.siteid, function(err, site){
+        if(err)throw err;
+        res.send(site);
+    })
+})
+
 
 
 //this route returns the profile info of the current logged in user
@@ -420,10 +472,6 @@ router.post('/cancelorder', function(req, res){
 });
 
 
-router.get('/maps', function(req, res){
-    res.render('map');
-});
-
 
 //this post request is to add issues with some orders
 router.post('/addissue', function(req, res){
@@ -462,8 +510,61 @@ router.post('/addissue', function(req, res){
             res.redirect('/');
         })
     }
-})
+});
 
+
+router.post('/requestquote', function(req, res){
+    console.log(req);
+    var quality = req.body.quality;
+    var quantity = req.body.quantity;
+    var customerSite = req.body.customerSite;
+    var generationDate =  Date.now();
+    var requiredDate = req.body.requiredDate;
+    var requestedBy = req.user.name;
+    var requestedById = req.user._id;
+
+    req.checkBody('quantity', 'quantity cannot be empty').notEmpty();
+    req.checkBody('quality', 'quality cannot be empty').notEmpty();
+    req.checkBody('customerSite', 'customerSite cannot be empty').notEmpty();
+    req.checkBody('requiredDate', 'requiredDate cannot be empty').notEmpty();
+
+    var errors = req.validationErrors();
+    console.log(errors);
+    
+    if(errors){
+        res.send(errors);
+    }else{
+        var newQuote = new Quote({
+            quantity : quantity,
+            quality : quality,
+            customerSite : customerSite,
+            generationDate : generationDate,
+            requiredDate : requiredDate,
+            requestedBy : requestedBy,
+            requestedById : requestedById
+        });
+
+        Quote.addQuote(newQuote, function(err, quote){
+            res.send('new request for quote submitted for ' + quote.quantity + ' of ' + quote.quality  + ' quality redimix.');
+        })
+    };
+});
+
+
+//this route will cancel an existing quote that was created by contractor
+router.post('/cancelquote', function(req, res){
+    var quoteId = req.body.quoteId;
+    console.log(quoteId);
+    console.log(req.body);
+    Quote.cancelQuote(quoteId, function(err, quote){
+        if(err)throw err;
+        res.send('quote is cancelled' + quote);
+    })
+});
+
+
+
+//this function checks if the user is in session or not
 function isAuthenticated(req, res, next){
     if(req.isAuthenticated()){
         next();

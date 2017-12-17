@@ -52,6 +52,32 @@ block content
   br
   br
   br
+  if quotes
+    legend Current Quotes
+    table.table.table-striped.table-bordered
+      thead
+        tr
+          td  quantity
+          td  quality
+          td  generation date
+          td  required By
+          td  customerSite
+          td  Cancel quote
+      tdata
+        each quote, i in quotes
+          tr
+            td #{quote.quantity}
+            td #{quote.quality}
+            td #{quote.generationDate}
+            td #{quote.requiredDate}
+            td #{quote.customerSite}
+            td 
+              a.btn.btn-danger(href='#',id='cancelQuoteBtn' data-id='#{quote._id}') Cancel Quote
+  br
+  br
+  br
+  br
+  br
   if orders
     legend Current Orders
     table.table.table-striped.table-bordered
@@ -150,6 +176,42 @@ block content
   br
   br
   br
+  form(action='/requestquote', method='post')
+    .form-group
+      legend Request Quote
+      input.form-control(type='text' placeholder='quality' name='quality')
+      br
+      input.form-control(type='text' placeholder='quantity' name='quantity')
+      br
+      input.form-control(type='text' placeholder='customerSite' name='customerSite')
+      br
+      input.form-control(type='text' placeholder='requiredDate' name='requiredDate')
+      br
+      br
+      input.form-control.btn.btn-success(type='Submit' value='submit')
+  br
+  br
+  br
+  br
+  br
+  form(action='/addsite', method='post')
+    .form-group
+      legend Add Site
+      input.form-control(type='text' placeholder='name' name='name')
+      br
+      input.form-control(type='text' placeholder='lat' name='lat')
+      br
+      input.form-control(type='text' placeholder='long' name='long')
+      br
+      input.form-control(type='text' placeholder='address' name='address')
+      br
+      br
+      input.form-control.btn.btn-success(type='Submit' value='submit')
+  br
+  br
+  br
+  br
+  br
   script(type='text/javascript').
     $(document).ready(function(){
       $('#cancelOrderBtn').click(function(e){
@@ -164,6 +226,23 @@ block content
         console.log(data);
         $.post(
           '/cancelorder',
+          data,
+          function(data){
+            console.log(data);
+          }
+        );
+        window.location = '/';
+      })
+      $('#cancelQuoteBtn').click(function(e){
+        console.log('button clicked');
+        e.preventDefault();
+        var id = $(this).data('id');
+        var data = {
+          quoteId:id
+        }
+        console.log(data);
+        $.post(
+          '/cancelquote',
           data,
           function(data){
             console.log(data);

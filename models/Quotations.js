@@ -6,8 +6,12 @@ var mongoose = require('mongoose');
 var connection = mongoose.connect('mongodb://localhost:27017/concrete');//connecting to our database named concrete
 var bcrypt = require('bcrypt');
 //creating the USER Schema
-var OrderSchema = mongoose.Schema({
-    date:{
+var QuoteSchema = mongoose.Schema({
+    generationDate:{
+        type:String,
+        required:true
+    },
+    requiredDate:{
         type:String,
         required:true
     },
@@ -19,6 +23,10 @@ var OrderSchema = mongoose.Schema({
         type:String,
         required:true
     },
+    customerSite:{
+        type:String,
+        required:true
+    },
     requestedBy:{
         type:String,
         required:true
@@ -27,36 +35,24 @@ var OrderSchema = mongoose.Schema({
         type:mongoose.Schema.Types.ObjectId,
         required:true
     },
-    companyName:{
-            type:String
-    },
-    cancelled:{
-        type:Boolean,
-        default:false
-    },
-    reason:{
-        type:String
-    }
+    responses:[{
+        rmxId:mongoose.Schema.Types.ObjectId,
+        price:Number,
+        validTill:String
+    }]
 });
 
 
-var Order = module.exports = mongoose.model('Order', OrderSchema);
+var Quote = module.exports = mongoose.model('Quote', QuoteSchema);
 
-module.exports.getAllOrderdByUserId = function(id, callback){
-    Orders.find({requestedById:id}, {} , callback);
+module.exports.getAllQuotesByUserId = function(id, callback){
+    Quote.find({requestedById:id}, {} , callback);
 }
 
-module.exports.addOrder = function(newOrder, callback){
-    newOrder.save(newOrder, callback);
+module.exports.addQuote = function(newQuote, callback){
+    newQuote.save(newQuote, callback);
 }
 
-module.exports.cancelOrder = function(orderId, reason, callback){
-    Order.findOne({_id:orderId}, function(err, order){
-        if(err)throw err;
-        order.cancelled = true;
-        order.reason = reason;
-        order.save(function(err){
-            callback(err, order);
-        });
-    })
+module.exports.cancelQuote = function(quoteId, callback){
+    Quote.findOneAndRemove({_id:quoteId}, callback);
 }
