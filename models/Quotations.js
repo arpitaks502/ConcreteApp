@@ -45,12 +45,24 @@ var QuoteSchema = mongoose.Schema({
 
 var Quote = module.exports = mongoose.model('Quote', QuoteSchema);
 
+module.exports.getAllQuotesForSupplier = function(callback){
+    Quote.find({}, {}, callback);
+}
 module.exports.getAllQuotesByUserId = function(id, callback){
     Quote.find({requestedById:id}, {} , callback);
 }
 
 module.exports.addQuote = function(newQuote, callback){
     newQuote.save(newQuote, callback);
+}
+
+module.exports.respondToQuote = function(quoteId, response, callback){
+    console.log(response);
+    Quote.findOneAndUpdate({_id:quoteId}, {$push : {'responses':response}}, {safe:true, upsert:true} , callback);
+}
+
+module.exports.deleteResponse = function(quoteId, reponseId, callback){
+    Quote.findOneAndUpdate({_id:quoteID}, {$pull: {_id:responseId}}, callback);
 }
 
 module.exports.cancelQuote = function(quoteId, callback){

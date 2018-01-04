@@ -1,0 +1,13 @@
+doctype html
+html
+  head
+    title= title
+    link(rel='stylesheet', href='/stylesheets/style.css')
+  body
+    form(action='/users/login', method='post')
+        input(name='username' type='text' placeholder='username')
+        input(name='password' type='password' placeholder='password')
+        p
+            #{captcha}
+        input(type='text' name='captcha' placeholder='captcha')
+        button(type='submit' value='submit')

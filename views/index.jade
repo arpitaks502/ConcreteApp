@@ -91,7 +91,7 @@ block content
           td  Cancel order
       tdata
         each order, i in orders
-          if !order.cancelled
+          if order.status != 'cancelled'
             tr
               td #{order.quantity}
               td #{order.quality}
@@ -112,7 +112,7 @@ block content
         td  reason for cancellation
       tdata
         each order, i in orders
-          if order.cancelled
+          if order.status == 'cancelled'
             tr
               td #{order.quantity}
               td #{order.quality}
