@@ -19,6 +19,10 @@ var UserSchema = mongoose.Schema({
         type:Number,
         required:true
     },
+    userType:{
+        type:String,
+        required:true
+    },
     pan:{
         type:String,
         required:true

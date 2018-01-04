@@ -7,7 +7,11 @@ var connection = mongoose.connect('mongodb://localhost:27017/concrete');//connec
 var bcrypt = require('bcrypt');
 //creating the USER Schema
 var OrderSchema = mongoose.Schema({
-    date:{
+    generationDate:{
+        type:String,
+        required:true
+    },
+    requiredByDate:{
         type:String,
         required:true
     },
@@ -27,20 +31,24 @@ var OrderSchema = mongoose.Schema({
         type:mongoose.Schema.Types.ObjectId,
         required:true
     },
-    companyName:{
-            type:String
+    supplierId:{
+        type:mongoose.Schema.Types.ObjectId,
+        required:true
     },
-    cancelled:{
-        type:Boolean,
-        default:false
-    },
-    status:{
+    price:{
         type:String,
         required:true
     },
-    reason:{
-        type:String
-    }
+    companyName:{
+        type:String,
+        required:true
+    },
+    customerSite:{
+        type:mongoose.Schema.Types.ObjectId
+    },
+    status:String,
+    statusDate:String,
+    statusDesc:String
 });
 
 
@@ -50,6 +58,10 @@ module.exports.getAllOrderdByUserId = function(id, callback){
     Order.find({requestedById:id}, {} , callback);
 }
 
+module.exports.getAllOrderdBySupplierId = function(id, callback){
+    Order.find({supplierId:id}, {} , callback);
+}
+
 module.exports.createOrder = function(newOrder, callback){
     newOrder.save(newOrder, callback);
 }
@@ -57,11 +69,21 @@ module.exports.createOrder = function(newOrder, callback){
 module.exports.cancelOrder = function(orderId, reason, callback){
     Order.findOne({_id:orderId}, function(err, order){
         if(err)throw err;
-        order.cancelled = true;
-        order.reason = reason;
+        order.statusDesc = reason;
         order.status = 'cancelled';
+        order.statusDate = Date.now();
         order.save(function(err){
             callback(err, order);
         });
     })
+}
+
+
+module.exports.getOrdersForResponse = function(callback){
+    Order.find({status:'submitted'}, callback);
+}
+
+
+module.exports.updatePendingOrder = function(orderId, status, statusDesc, statusDate, callback){
+    Order.findOneAndUpdate({_id:orderId}, {status:status, statusDesc:statusDesc, statusDate:statusDate}, callback);
 }

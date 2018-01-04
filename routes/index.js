@@ -55,7 +55,6 @@ router.get('/login', function(req, res, next){
 
 
 
-
 //for getting signup page
 router.get('/signup', function(req, res, next){
     res.render('signup');
@@ -165,6 +164,7 @@ router.post('/signup', function(req, res, next){
     var gstin = req.body.gstin;
     var password = req.body.password;
     var password2 = req.body.password2;
+    var userType = 'contractor';
 
     console.log(req.body.name);
     console.log(name);
@@ -193,7 +193,8 @@ router.post('/signup', function(req, res, next){
             contact:contact,
             pan:pan,
             gstin:gstin,
-            password:password
+            password:password,
+            userType:userType
         });
 
         User.createUser(newUser, function (err, user) {
@@ -318,7 +319,7 @@ router.post('/profile', function(req, res){
 
 //this route returns all the order(cancelled as well as successful)
 router.get('/history', function(req, res){
-    Orders.getAllOrderdByUserId(req.user._id, function(err, orders){
+    Order.getAllOrderdByUserId(req.user._id, function(err, orders){
         res.send(orders);
     })
 });
@@ -409,16 +410,71 @@ router.post('/reset/:token', function(req, res){
 });
 
 
+router.post('/requestquote', function(req, res){
+    console.log(req);
+    var quality = req.body.quality;
+    var quantity = req.body.quantity;
+    var customerSite = req.body.customerSite;
+    var generationDate =  Date.now();
+    var requiredDate = req.body.requiredDate;
+    var requestedBy = req.user.name;
+    var requestedById = req.user._id;
+
+    req.checkBody('quantity', 'quantity cannot be empty').notEmpty();
+    req.checkBody('quality', 'quality cannot be empty').notEmpty();
+    req.checkBody('customerSite', 'customerSite cannot be empty').notEmpty();
+    req.checkBody('requiredDate', 'requiredDate cannot be empty').notEmpty();
+
+    var errors = req.validationErrors();
+    console.log(errors);
+    
+    if(errors){
+        res.send(errors);
+    }else{
+        var newQuote = new Quote({
+            quantity : quantity,
+            quality : quality,
+            customerSite : customerSite,
+            generationDate : generationDate,
+            requiredDate : requiredDate,
+            requestedBy : requestedBy,
+            requestedById : requestedById
+        });
+
+        Quote.addQuote(newQuote, function(err, quote){
+            res.send('new request for quote submitted for ' + quote.quantity + ' of ' + quote.quality  + ' quality redimix.');
+        })
+    };
+});
+
+
+//this route will cancel an existing quote that was created by contractor
+router.post('/cancelquote', function(req, res){
+    var quoteId = req.body.quoteId;
+    console.log(quoteId);
+    console.log(req.body);
+    Quote.cancelQuote(quoteId, function(err, quote){
+        if(err)throw err;
+        res.send('quote is cancelled' + quote);
+    })
+});
 
 
 //API to add an Order
 router.post('/addorder', function(req, res, next){
+    var date = Date.now();
+    var requiredByDate = req.body.requiredDate;
     var quantity = req.body.quantity;
     var quality = req.body.quality;
     var requestedBy = req.body.requestedBy;
-    var date = new Date();
     var requestedById = req.body.requestedById;
-    var status = 'ongoing';
+    var supplierId = req.body.supplierId;
+    var price = req.body.price;
+    var companyName = req.body.companyName;
+    var customerSite = req.body.customerSite;
+    var status = 'submitted';
+    var statusDate = Date.now();
+    var statusDesc = 'Your orders is submitted and is waiting to get confirmation from seller';
 
     console.log(req.body.quantity);
     console.log(quantity);
@@ -436,12 +492,19 @@ router.post('/addorder', function(req, res, next){
     }else{
         console.log('else block called');
         var newOrder = new Order({
+            generationDate:date,
+            requiredByDate:requiredDate,
             quality:quality,
             quantity:quantity,
             requestedBy:requestedBy,
             requestedById:requestedById,
-            date:date,
-            status:status
+            supplierId:supplierId,
+            price:price,
+            companyName:companyName,
+            customerSite:customerSite,
+            status:status,
+            statusDate:statusDate,
+            statusDesc:statusDesc
         });
 
         Order.createOrder(newOrder, function (err, Order) {
@@ -510,56 +573,6 @@ router.post('/addissue', function(req, res){
             res.redirect('/');
         })
     }
-});
-
-
-router.post('/requestquote', function(req, res){
-    console.log(req);
-    var quality = req.body.quality;
-    var quantity = req.body.quantity;
-    var customerSite = req.body.customerSite;
-    var generationDate =  Date.now();
-    var requiredDate = req.body.requiredDate;
-    var requestedBy = req.user.name;
-    var requestedById = req.user._id;
-
-    req.checkBody('quantity', 'quantity cannot be empty').notEmpty();
-    req.checkBody('quality', 'quality cannot be empty').notEmpty();
-    req.checkBody('customerSite', 'customerSite cannot be empty').notEmpty();
-    req.checkBody('requiredDate', 'requiredDate cannot be empty').notEmpty();
-
-    var errors = req.validationErrors();
-    console.log(errors);
-    
-    if(errors){
-        res.send(errors);
-    }else{
-        var newQuote = new Quote({
-            quantity : quantity,
-            quality : quality,
-            customerSite : customerSite,
-            generationDate : generationDate,
-            requiredDate : requiredDate,
-            requestedBy : requestedBy,
-            requestedById : requestedById
-        });
-
-        Quote.addQuote(newQuote, function(err, quote){
-            res.send('new request for quote submitted for ' + quote.quantity + ' of ' + quote.quality  + ' quality redimix.');
-        })
-    };
-});
-
-
-//this route will cancel an existing quote that was created by contractor
-router.post('/cancelquote', function(req, res){
-    var quoteId = req.body.quoteId;
-    console.log(quoteId);
-    console.log(req.body);
-    Quote.cancelQuote(quoteId, function(err, quote){
-        if(err)throw err;
-        res.send('quote is cancelled' + quote);
-    })
 });
 
 
