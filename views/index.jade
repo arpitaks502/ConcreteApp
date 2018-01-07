@@ -85,8 +85,11 @@ block content
         tr
           td  quantity
           td  quality
+          td  price
           td  date
           td  status
+          td  message
+          td  last updated
           td  companyName
           td  Cancel order
       tdata
@@ -95,8 +98,11 @@ block content
             tr
               td #{order.quantity}
               td #{order.quality}
-              td #{order.date}
+              td #{order.price}
+              td #{order.generationDate}
               td #{order.status}
+              td #{order.statusDesc}
+              td #{order.statusDate}
               td #{order.companyName}
               td 
                 a.btn.btn-danger(href='#',id='cancelOrderBtn' data-id='#{order._id}') Cancel order

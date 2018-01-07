@@ -61,8 +61,8 @@ module.exports.respondToQuote = function(quoteId, response, callback){
     Quote.findOneAndUpdate({_id:quoteId}, {$push : {'responses':response}}, {safe:true, upsert:true} , callback);
 }
 
-module.exports.deleteResponse = function(quoteId, reponseId, callback){
-    Quote.findOneAndUpdate({_id:quoteID}, {$pull: {_id:responseId}}, callback);
+module.exports.deleteResponse = function(quoteId, responseId, callback){
+    Quote.findOneAndUpdate({_id:quoteId}, {$pull: {responses:{_id:responseId}}}, callback);
 }
 
 module.exports.cancelQuote = function(quoteId, callback){
