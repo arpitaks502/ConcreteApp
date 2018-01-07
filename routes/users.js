@@ -15,6 +15,7 @@ var User  = require('../models/User');
 var Order = require('../models/Orders');
 var Issue = require('../models/Issues');
 var Quote = require('../models/Quotations');
+var PO = require('../models/PurchaseOrder');
 
 
 //These are all the get requests
@@ -436,6 +437,25 @@ router.post('/removequote', function(req, res){
 	});
 });
 
+
+//this api will show PO requests in response to the quotes the supplier sent out , waiting to be confirmed
+router.post('/pendingpo', function(req, res){
+	var id = req.body.id;
+	PO.findPendingPOSupplier(id, function(err, pos){
+		res.send(pos);
+	})
+});
+
+
+//this api will confirm the PO accepted by supplier
+router.post('/confirmpendingpo', function(req, res){
+	var id = req.body.id;
+
+	PO.confirmPOBySupplier(id, function(err, po){
+		if(err)throw err;
+		res.send('po confirmed' + po);
+	})
+})
 
 //this api will show all the orders that are pending confirmation from seller
 router.get('/pendingorders', function(req, res){

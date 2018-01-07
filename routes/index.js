@@ -15,6 +15,7 @@ var User  = require('../models/User');
 var Order = require('../models/Orders');
 var Issue = require('../models/Issues');
 var Quote = require('../models/Quotations');
+var PO = require('../models/PurchaseOrder')
 
 
 //These are all the get requests
@@ -460,6 +461,49 @@ router.post('/cancelquote', function(req, res){
 });
 
 
+//this route will create a purchase order between contractor and supplier
+router.post('/createpo', function(req, res){
+    var generationDate = Date.now();
+    var validTill = req.body.validTill;
+    var quantity = req.body.quantity;
+    var quality = req.body.quality;
+    var price = req.body.price;
+    var customerSite = req.body.customerSite;
+    var requestedBy = req.body.requestedBy;
+    var requestedById = req.body.requestedById;
+    var supplierId = req.body.supplierId;
+
+    var newPO = new PO({
+        generationDate : generationDate,
+        validTill : validTill,
+        quantity : quantity,
+        quality : quality,
+        price : price,
+        customerSite : customerSite,
+        requestedBy : requestedBy,
+        requestedById : requestedById,
+        supplierId : supplierId,
+        confirmedBySupplier:false
+    });
+
+    PO.createPO(newPO, function(err, PO){
+        if(err)throw err;
+        res.send('PO created ' + PO);
+    });
+});
+
+
+//this api will delete PO from from the contractor side but it will still be visible for the sake of history
+router.post('/deletepo', function(req, res){
+    var id = req.body.id;
+
+    PO.deletePOByContractor(id, function(err, po){
+        res.send('the PO has been deleted' + po);
+    });
+})
+
+
+
 //API to add an Order
 router.post('/addorder', function(req, res, next){
     var date = Date.now();
@@ -493,7 +537,7 @@ router.post('/addorder', function(req, res, next){
         console.log('else block called');
         var newOrder = new Order({
             generationDate:date,
-            requiredByDate:requiredDate,
+            requiredByDate:requiredByDate,
             quality:quality,
             quantity:quantity,
             requestedBy:requestedBy,

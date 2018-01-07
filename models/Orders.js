@@ -76,7 +76,7 @@ module.exports.cancelOrder = function(orderId, reason, callback){
             callback(err, order);
         });
     })
-}
+}   
 
 
 module.exports.getOrdersForResponse = function(callback){
